@@ -69,10 +69,7 @@ contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole,Far
   event Purchased(uint upc);
 
   // Define a modifer that checks to see if msg.sender == owner of the contract
-   modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
+  
 
   // Define a modifer that verifies the Caller
   modifier verifyCaller (address _address) {
@@ -244,6 +241,8 @@ require(items[_upc].itemState == State.Shipped);
     paidEnough(items[_upc].productPrice)
     // Call modifer to send any excess ether back to buyer
     checkValue(_upc)
+    //call modifier to check if the caller is distributor.
+    onlyDistributor
     {
 
     // Update the appropriate fields - ownerID, distributorID, itemState
@@ -275,6 +274,7 @@ require(items[_upc].itemState == State.Shipped);
   function receiveItem(uint _upc) public
     // Call modifier to check if upc has passed previous supply chain stage
     shipped(_upc)
+    onlyRetailer
     // Access Control List enforced by calling Smart Contract / DApp
     {
     // Update the appropriate fields - ownerID, retailerID, itemState
@@ -291,6 +291,7 @@ require(items[_upc].itemState == State.Shipped);
     // Call modifier to check if upc has passed previous supply chain stage
     received(_upc)
     // Access Control List enforced by calling Smart Contract / DApp
+    onlyConsumer
     {
     // Update the appropriate fields - ownerID, consumerID, itemState
     items[_upc].itemState = State.Purchased;
