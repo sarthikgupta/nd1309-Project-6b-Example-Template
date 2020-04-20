@@ -1,6 +1,12 @@
 pragma solidity >=0.4.24;
+import '../coffeecore/Ownable.sol';
+import '../coffeeaccesscontrol/FarmerRole.sol';
+import '../coffeeaccesscontrol/ConsumerRole.sol';
+import '../coffeeaccesscontrol/RetailerRole.sol';
+import '../coffeeaccesscontrol/DistributorRole.sol';
+
 // Define a contract 'Supplychain'
-contract SupplyChain {
+contract SupplyChain is Ownable, ConsumerRole, RetailerRole, DistributorRole,FarmerRole  {
 
   // Define 'owner'
   address owner;
@@ -14,13 +20,13 @@ contract SupplyChain {
   // Define a public mapping 'items' that maps the UPC to an Item.
   mapping (uint => Item) items;
 
-  // Define a public mapping 'itemsHistory' that maps the UPC to an array of TxHash, 
+  // Define a public mapping 'itemsHistory' that maps the UPC to an array of TxHash,
   // that track its journey through the supply chain -- to be sent from DApp.
   mapping (uint => string[]) itemsHistory;
   
   // Define enum 'State' with the following values:
-  enum State 
-  { 
+  enum State
+  {
     Harvested,  // 0
     Processed,  // 1
     Packed,     // 2
@@ -63,14 +69,14 @@ contract SupplyChain {
   event Purchased(uint upc);
 
   // Define a modifer that checks to see if msg.sender == owner of the contract
-  modifier onlyOwner() {
+   modifier onlyOwner() {
     require(msg.sender == owner);
     _;
   }
 
   // Define a modifer that verifies the Caller
   modifier verifyCaller (address _address) {
-    require(msg.sender == _address); 
+    require(msg.sender == _address);
     _;
   }
 
@@ -160,8 +166,11 @@ require(items[_upc].itemState == State.Shipped);
     string memory _originFarmInformation,
     string  memory _originFarmLatitude,
     string  memory _originFarmLongitude,
-    string  memory _productNotes) public{
+    string  memory _productNotes) public onlyFarmer() {
     // Add the new item as part of Harvest
+
+
+
     items[_upc] = Item({
       sku: sku,
       upc: _upc,
@@ -199,7 +208,7 @@ require(items[_upc].itemState == State.Shipped);
   }
 
   // Define a function 'packItem' that allows a farmer to mark an item 'Packed'
-  function packItem(uint _upc) public 
+  function packItem(uint _upc) public
   // Call modifier to check if upc has passed previous supply chain stage
   processed(_upc)
   // Call modifier to verify caller of this function
@@ -236,7 +245,7 @@ require(items[_upc].itemState == State.Shipped);
     // Call modifer to send any excess ether back to buyer
     checkValue(_upc)
     {
-    
+
     // Update the appropriate fields - ownerID, distributorID, itemState
         items[_upc].ownerID = msg.sender;
         items[_upc].distributorID = msg.sender;
@@ -313,7 +322,6 @@ require(items[_upc].itemState == State.Shipped);
     originFarmInformation = items[_upc].originFarmInformation;
     originFarmLatitude = items[_upc].originFarmLatitude;
     originFarmLongitude = items[_upc].originFarmLongitude;
-  
   return
   (
   itemSKU,
@@ -351,8 +359,8 @@ require(items[_upc].itemState == State.Shipped);
     distributorID = items[_upc].distributorID;
     retailerID = items[_upc].retailerID;
     consumerID = items[_upc].consumerID;
-    
-  return 
+
+  return
   (
   itemSKU,
   itemUPC,
